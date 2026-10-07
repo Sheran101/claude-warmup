@@ -1,0 +1,42 @@
+name: Claude session warmup
+
+on:
+  schedule:
+    # 01:00 UTC = 06:30 Sri Lanka time (UTC+5:30)
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Start Claude session
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: claude -p "hi" --model haiku
+
+      - name: Notify Discord
+        if: always()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "No Discord webhook configured, skipping."
+            exit 0
+          fi
+          if [ "$JOB_STATUS" = "success" ]; then
+            MSG="✅ Claude session started at $(TZ=Asia/Colombo date +%H:%M) (Sri Lanka time)"
+          else
+            MSG="⚠️ Claude warmup failed, run claude setup-token again and update the secret"
+          fi
+          jq -n --arg content "$MSG" '{content: $content}' \
+            | curl -sS -X POST -H "Content-Type: application/json" -d @- "$DISCORD_WEBHOOK_URL"
