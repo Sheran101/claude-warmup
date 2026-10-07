@@ -2,8 +2,10 @@ name: Claude session warmup
 
 on:
   schedule:
-    # 01:00 UTC = 06:30 Sri Lanka time (UTC+5:30)
-    - cron: '0 1 * * *'
+    # Sri Lanka time is UTC+5:30. Chained 5-hour windows covering 09:00-17:30.
+    - cron: '0 0 * * *'   # 05:30 SL -> window ends 10:30 (tea break)
+    - cron: '0 5 * * *'   # 10:30 SL -> window ends 15:30
+    - cron: '0 10 * * *'  # 15:30 SL -> window ends 20:30
   workflow_dispatch:
 
 jobs:
