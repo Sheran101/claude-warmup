@@ -1,11 +1,9 @@
 name: Claude session warmup
 
 on:
-  schedule:
-    # Sri Lanka time is UTC+5:30. Chained 5-hour windows covering 09:00-17:30.
-    - cron: '0 0 * * *'   # 05:30 SL -> window ends 10:30 (tea break)
-    - cron: '0 5 * * *'   # 10:30 SL -> window ends 15:30
-    - cron: '0 10 * * *'  # 15:30 SL -> window ends 20:30
+  # Triggered at exact times by cron-job.org via the workflow_dispatch API
+  # (05:30, 10:35, 15:40 Sri Lanka time). GitHub's own schedule was dropped
+  # because it ran 20 min to 17 hours late. Also runnable by hand.
   workflow_dispatch:
 
 jobs:
