@@ -2,7 +2,7 @@ name: Claude session warmup
 
 on:
   # Triggered at exact times by cron-job.org via the workflow_dispatch API
-  # (05:30, 10:35, 15:40 Sri Lanka time). GitHub's own schedule was dropped
+  # (05:30, 10:35, 15:40, 20:45 Sri Lanka time). GitHub's own schedule was dropped
   # because it ran 20 min to 17 hours late. Also runnable by hand.
   workflow_dispatch:
 
@@ -22,21 +22,3 @@ jobs:
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: claude -p "hi" --model haiku
-
-      - name: Notify Discord
-        if: always()
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          JOB_STATUS: ${{ job.status }}
-        run: |
-          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-            echo "No Discord webhook configured, skipping."
-            exit 0
-          fi
-          if [ "$JOB_STATUS" = "success" ]; then
-            MSG="✅ Claude session started at $(TZ=Asia/Colombo date +%H:%M) (Sri Lanka time)"
-          else
-            MSG="⚠️ Claude warmup failed, run claude setup-token again and update the secret"
-          fi
-          jq -n --arg content "$MSG" '{content: $content}' \
-            | curl -sS -X POST -H "Content-Type: application/json" -d @- "$DISCORD_WEBHOOK_URL"
